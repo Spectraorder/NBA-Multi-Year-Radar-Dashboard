@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap');
+
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE 10+ */
+  user-select: none;         /* Standard syntax */
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #f7f9fc, #e9f0f8, #f0f4f8, #f7f9fc);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  margin: 0;
+  padding: 20px;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+h1 {
+  text-align: center;
+}
+
+/* Center the charts container */
+.charts {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* Each .chart is a column of title + svg */
+.chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
+  text-align: center;
+}
+
+/* Ensure the SVG is displayed as a block so margins work properly */
+.chart svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.chart-wrapper {
+  position: relative;
+  width: 800px; /* Your fixed width */
+  height: 500px; /* Same as the radar chart's height */
+  margin: 0 auto;
+  border: 1px solid #ccc; /* Optional, for visualization */
+}
+
+.player-info {
+  position: absolute;
+  left: 20%;  /* Fixed left margin */
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  opacity: 1;
+}
+
+.player-info.fade-in {
+  animation: fadeIn 0.5s forwards;
+}
+
+.player-info.fade-out {
+  animation: fadeOut 0.5s forwards;
+}
+
+.team-info {
+  font-size: 16px;
+  margin-top: 5px;
+}
+
+/* Fade in keyframes: opacity from 0 to 1, slight vertical movement */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Fade out keyframes: opacity from 1 to 0, slight vertical movement */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+}
+
+/* Existing CSS for radar-chart-container and progress-bar remains unchanged */
+.radar-chart-container {
+  position: absolute;
+  right: 20px; /* Fixed right margin */
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.progress-bar {
+  position: absolute;
+  bottom: 20px;  /* Fixed bottom margin */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 5px;
+  background-color: #b32020;
+  border-radius: 5px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #ddd;
+  transition: width 0.05s linear;
+}
+
+.bottom-charts {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 1000px;
+  margin: 20px auto 0;
+  border: 1px solid #ccc; /* Border for the bottom charts */
+  padding: 10px;
+  gap: 20px;             /* Space between the line chart and the pie chart */
+}
+
+.line-chart-wrapper, .pie-chart-wrapper {
+  flex: 1;
+}
+
+
+
+  
+  
