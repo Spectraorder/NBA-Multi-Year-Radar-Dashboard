@@ -4,6 +4,12 @@
 
 This visualization is designed to provide an interactive, multi-view dashboard for exploring NBA player performance data over multiple years. The dashboard integrates several visualization components to help users gain insights into players’ performance metrics and team affiliations.
 
+## Live Demo
+
+Access the live version of the dashboard here:  
+[https://spectraorder.github.io/NBA-Multi-Year-Radar-Dashboard/](https://spectraorder.github.io/NBA-Multi-Year-Radar-Dashboard/)
+
+
 ## Goals
 
 - **Explore Multi-Year Performance:**  
