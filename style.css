@@ -13,7 +13,7 @@ body {
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
   margin: 0;
-  padding: 20px;
+  padding: 0;
 }
 
 @keyframes gradientBG {
@@ -32,14 +32,6 @@ h1 {
   text-align: center;
 }
 
-/* Center the charts container */
-.charts {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
 /* Each .chart is a column of title + svg */
 .chart {
   display: flex;
@@ -55,11 +47,21 @@ h1 {
   margin: 0 auto;
 }
 
+.dashboard-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  max-width: 1800px; 
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+}
+
 .chart-wrapper {
   position: relative;
-  width: 800px; /* Your fixed width */
-  height: 500px; /* Same as the radar chart's height */
-  margin: 0 auto;
+  width: 800px;
+  height: 500px;
+  margin: 20px 0 0 0;
   border: 1px solid #ccc; /* Optional, for visualization */
 }
 
@@ -142,17 +144,13 @@ h1 {
   justify-content: space-between;
   align-items: flex-start;
   width: 1000px;
-  margin: 20px auto 0;
-  border: 1px solid #ccc; /* Border for the bottom charts */
+  margin: 20px 0 0 0;
+  border: 1px solid #ccc;
   padding: 10px;
-  gap: 20px;             /* Space between the line chart and the pie chart */
+  gap: 20px;
 }
 
 .line-chart-wrapper, .pie-chart-wrapper {
   flex: 1;
 }
-
-
-
-  
   

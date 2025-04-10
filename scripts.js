@@ -163,7 +163,7 @@ function RadarDashboard() {
   }, [playerRecords]);
 
   return (
-    <>
+    <div className="dashboard-container">
       <div className="chart-wrapper">
         <PlayerInfo 
           name={selectedPlayer} 
@@ -208,7 +208,7 @@ function RadarDashboard() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
