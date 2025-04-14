@@ -2,57 +2,68 @@
 
 ## Overview
 
-This visualization is designed to provide an interactive, multi-view dashboard for exploring NBA player performance data over multiple years. The dashboard integrates several visualization components to help users gain insights into players’ performance metrics and team affiliations.
+This interactive visualization provides a multi-view dashboard for exploring NBA player performance data over multiple seasons. The dashboard brings together several visualization components and filtering options, allowing users to dive into players’ performance metrics, team affiliations, and career spans.
 
 ## Live Demo
 
 Access the live version of the dashboard here:  
 [https://spectraorder.github.io/NBA-Multi-Year-Radar-Dashboard/](https://spectraorder.github.io/NBA-Multi-Year-Radar-Dashboard/)
 
-
 ## Goals
 
 - **Explore Multi-Year Performance:**  
-  Allow users to see and compare key performance metrics for NBA players over multiple years.
+  Enable users to inspect and compare key performance metrics for NBA players over different seasons.
 
 - **Interactive Analysis:**  
-  Enable users to interact with different visualization components (radar chart, line chart, pie chart) to discover detailed insights.
+  Allow users to interact with different visualization components—including radar, line, and pie charts—while filtering results by team, single-team experience, and year range.
 
 - **Dynamic Linking Across Views:**  
-  Ensure that interactions in one visualization (e.g., hovering over a particular year in the line chart) update other views (e.g., highlighting the corresponding polygon in the radar chart and showing the team distribution in the pie chart).
+  Ensure that user interactions in one view (e.g., hover events on the line chart) automatically update corresponding details in other views (such as highlighting the relevant polygon in the radar chart or team slice in the pie chart).
 
 ## Supported User Tasks and Visualization Components
 
-- **Task: Compare Performance Metrics Across Years**
+- **Task: Compare Performance Metrics Across Seasons**
   - **Radar Chart:**  
-    - Displays a radar chart for the selected player showing eight performance metrics.
-    - Interactive polygons update on hover to reveal specific year details.
-    - The chart automatically cycles through players with a visible progress indicator.
+    - Displays a radar chart for the selected player, showing eight key performance metrics.
+    - Interactive polygons update on hover to reveal performance details for individual seasons.
+    - Auto-cycling of player data has been replaced with manual selection for a static view, providing more direct user control.
 
 - **Task: Examine Performance Trends Over Time**
   - **Line Chart:**  
-    - Plots normalized performance metrics as separate lines over time.
-    - Interactive hover on the line chart pauses the automatic player cycling.
-    - Hovering over the line chart updates a shared `hoveredYear` state that highlights corresponding details in other views.
+    - Plots normalized performance metrics over time, with each metric represented by a separate line.
+    - Interactive hover on the line chart pauses any cycling and updates a shared `hoveredYear` state that influences other charts.
+    - This highlights corresponding details across the radar and pie charts.
 
-- **Task: Understand Team Affiliations**
+- **Task: Understand Team Affiliations and Career Profiles**
   - **Pie Chart:**  
-    - Displays a pie chart of the teams that a player has been on.
-    - Uses a seeded color scheme so that even similar teams receive distinct colors.
-    - On hover, slices expand and a tooltip appears; when the line chart’s hovered year is active, the corresponding team slice is highlighted with a thick border and an overlay card showing the team name.
-    - The overlay card is dynamically sized based on the team name, and pointer events are disabled to avoid interaction lag.
+    - Displays the distribution of teams that a selected player has been a part of.
+    - Uses a seeded color scheme to distinguish teams, ensuring even closely related teams appear unique.
+    - Hovering over slices expands the segment and shows a tooltip with team details and highlights the corresponding season’s data.
+  - **Team and Single-Team Filtering:**  
+    - A team selection dropdown filters the players list to only those from the selected team or shows all players if “All Teams” is chosen.
+    - An additional checkbox ("Single Team Only") limits the player list to those who have played for only one team over their career.
+  - **Year Range Slider:**  
+    - Two range sliders let users define a start and end year.
+    - The dashboard filters the available data based on the selected years, allowing users to focus on a specific period of NBA history.
 
+- **Task: Cross-Component Visual Linking**
+  - **Dynamic Filtering and Updates:**  
+    - Changes in team, player, or year range filters update all visualization components simultaneously.
+    - Hovering in one component (like the line chart) highlights related data in the radar chart and pie chart, supporting a cohesive exploratory experience.
 
 ## How to Test the Visualization
 
-- **Automatic Cycling:**  
-  Verify that the dashboard automatically cycles through different players and updates the radar chart, line chart, and pie chart accordingly.
+- **Filtering and Selection Controls:**  
+  - Use the team dropdown to filter the list of players to those who played for a particular team.  
+  - Toggle the "Single Team Only" checkbox to view only those players who have played for a single team throughout their careers.  
+  - Adjust the year range sliders to focus on a specific period. Verify that all charts update to reflect the filtered data.
 
-- **Chart Interactions:**
-  - Hover over the radar chart polygons to see the performance year highlighted with animated value labels.
-  - Hover over the line chart to pause the cycling, update the hovered year, and observe the corresponding slice and team card in the pie chart.
-  - Hover over the pie chart slices to see them expand and display a tooltip with team details.
-  - Move the cursor across charts and verify that transitions (fade, stroke, and overlay card) animate independently and smoothly.
+- **Chart Interactions:**  
+  - Hover over the radar chart polygons to see season-specific performance metrics and observe animated value labels.
+  - Hover over the line chart; the relevant year will be highlighted in all views.
+  - Interact with the pie chart slices to see them expand and display team-specific tooltips.
 
-- **Visual Linking Across Components:**  
-  Confirm that interactions in one component (like hovering over a specific year in the line chart) are reflected in the radar and pie charts (e.g., highlighting the corresponding radar polygon and team slice).
+- **Visual Linking:**  
+  - Confirm that selecting a team, a player, or a specific year range consistently updates all the visualization components.  
+  - Ensure that hover actions in one chart are appropriately reflected in the others.
+
