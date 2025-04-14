@@ -32,42 +32,78 @@ h1 {
   text-align: center;
 }
 
-/* Each .chart is a column of title + svg */
-.chart {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 20px;
-  text-align: center;
-}
+/* ----- Dashboard Layout ----- */
 
-/* Ensure the SVG is displayed as a block so margins work properly */
-.chart svg {
-  display: block;
-  margin: 0 auto;
+.outer-container {
+  text-align: center; /* Center inline/inline-block elements */
 }
 
 .dashboard-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  max-width: 1800px; 
-  margin: 0 auto;
+  display: inline-flex;      /* key for auto sizing */
+  flex-direction: column;
+  margin: 20px auto;         /* center horizontally */
   padding: 20px;
+  gap: 20px;
   border: 1px solid #ccc;
 }
 
+/* The top row has left (radar) and right (bottom-charts) panels */
+.top-row {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+/* Left panel for the radar chart */
+.left-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The radar chart area (keeps its explicit size) */
 .chart-wrapper {
   position: relative;
   width: 800px;
   height: 500px;
   margin: 20px 0 0 0;
-  border: 1px solid #ccc; /* Optional, for visualization */
+  border: 1px solid #ccc; 
 }
 
+/* Right panel holds bottom charts side by side */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The line chart and pie chart share space in .bottom-charts */
+.bottom-charts {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0 0 0;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+/* Additional charts below top-row */
+.additional-charts {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+  /* No fixed width: let it size naturally inside .dashboard-container */
+}
+
+/* Bar & scatter chart each occupy half of the row */
+.rank-bar-chart,
+.rank-scatter-chart {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+/* ----- Player Info & Animations ----- */
 .player-info {
   position: absolute;
-  left: 20%;  /* Fixed left margin */
+  left: 20%;
   top: 50%;
   transform: translate(-50%, -50%);
   font-family: Arial, sans-serif;
@@ -90,7 +126,6 @@ h1 {
   margin-top: 5px;
 }
 
-/* Fade in keyframes: opacity from 0 to 1, slight vertical movement */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -102,7 +137,6 @@ h1 {
   }
 }
 
-/* Fade out keyframes: opacity from 1 to 0, slight vertical movement */
 @keyframes fadeOut {
   from {
     opacity: 1;
@@ -114,17 +148,17 @@ h1 {
   }
 }
 
-/* Existing CSS for radar-chart-container and progress-bar remains unchanged */
+/* ----- Radar Chart & Progress Bar Positions ----- */
 .radar-chart-container {
   position: absolute;
-  right: 20px; /* Fixed right margin */
+  right: 20px; /* as desired for your radar layout */
   top: 50%;
   transform: translateY(-50%);
 }
 
 .progress-bar {
   position: absolute;
-  bottom: 20px;  /* Fixed bottom margin */
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   width: 80%;
@@ -139,18 +173,87 @@ h1 {
   transition: width 0.05s linear;
 }
 
-.bottom-charts {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 1000px;
-  margin: 20px 0 0 0;
-  border: 1px solid #ccc;
-  padding: 10px;
-  gap: 20px;
-}
-
+/* For the line & pie charts */
 .line-chart-wrapper, .pie-chart-wrapper {
   flex: 1;
 }
-  
+
+/* Utility: ensuring SVG is displayed block */
+.chart svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.selection-container {
+  display: flex;
+  justify-content: center; /* Center all selections in a row */
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.team-selection,
+.player-selection,
+.single-team-only {
+  flex: 1;
+  text-align: center;
+}
+
+.team-selection .team-select-label,
+.player-selection .player-select-label,
+.single-team-only .single-team-label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.team-selection select,
+.player-selection select {
+  font-size: 16px;
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.single-team-only {
+  flex: 1;
+  text-align: center;
+}
+
+.single-team-only .single-team-label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.single-team-only input {
+  display: block;
+  margin: 0 auto;
+}
+
+.year-slider-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 20px auto;
+  gap: 40px; /* space between the two sliders */
+  text-align: center;
+}
+
+.year-slider {
+  flex: 1;
+}
+
+.year-slider label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.year-slider input[type="range"] {
+  width: 80%;
+  margin: 0 auto;
+  display: block;
+}

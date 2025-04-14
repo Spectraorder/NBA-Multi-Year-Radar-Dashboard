@@ -32,29 +32,27 @@ function PlayerInfo({ name, team, rank }) {
   );
 }
 
-
 function RadarDashboard() {
   const [data, setData] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedPlayer, setSelectedPlayer] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState("");
+  const [onlySingleTeam, setOnlySingleTeam] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [hoveredYear, setHoveredYear] = useState(null);
+  const [minYear, setMinYear] = useState(1980);
+  const [maxYear, setMaxYear] = useState(2020); 
   const pausedRef = useRef(false);
 
-  // Hide the external chart title and nowShowing elements when the component mounts.
+  // Hide external titles on mount.
   useEffect(() => {
     const chartTitleEl = document.getElementById("chartTitle");
-    if (chartTitleEl) {
-      chartTitleEl.style.display = "none";
-    }
+    if (chartTitleEl) chartTitleEl.style.display = "none";
     const nowShowingEl = document.getElementById("nowShowing");
-    if (nowShowingEl) {
-      nowShowingEl.style.display = "none";
-    }
+    if (nowShowingEl) nowShowingEl.style.display = "none";
   }, []);
 
-  // Keep pausedRef in sync with paused state.
+  // Keep pausedRef in sync with paused.
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
@@ -77,13 +75,47 @@ function RadarDashboard() {
     });
   }, []);
 
-  // Create sorted list of unique players.
-  const players = useMemo(() => {
-    return Array.from(new Set(data.map(d => d.Player))).sort();
+  // Create sorted unique team list, add "All Teams" at the beginning.
+  const teams = useMemo(() => {
+    const teamList = Array.from(new Set(data.map(d => d.Team))).sort();
+    teamList.unshift("All Teams");
+    return teamList;
   }, [data]);
 
-  // Memoize metrics and global min/max values.
-  const metrics = useMemo(() => ["Pts Won", "Pts Max", "PTS", "TRB", "AST", "STL", "BLK", "TOV"], []);
+  // Filter by year range first:
+  const yearFilteredData = useMemo(() => {
+    return data.filter(d => d.Year >= minYear && d.Year <= maxYear);
+  }, [data, minYear, maxYear]);
+
+  // Now filter the data by team (if not "All Teams"):
+  const teamFilteredData = useMemo(() => {
+    if (selectedTeam && selectedTeam !== "All Teams") {
+      return yearFilteredData.filter(d => d.Team === selectedTeam);
+    }
+    return yearFilteredData;
+  }, [yearFilteredData, selectedTeam]);
+
+  // Then, build the players list, optionally filtering to single-team players:
+  const players = useMemo(() => {
+    // Start with all players in the filtered data
+    let uniquePlayers = Array.from(new Set(teamFilteredData.map(d => d.Player))).sort();
+    
+    // If onlySingleTeam is true, keep those who have played for exactly one team overall
+    if (onlySingleTeam) {
+      uniquePlayers = uniquePlayers.filter(player => {
+        const teamsForPlayer = new Set(data.filter(d => d.Player === player).map(d => d.Team));
+        return teamsForPlayer.size === 1;
+      });
+    }
+    return uniquePlayers;
+  }, [teamFilteredData, onlySingleTeam, data]);
+
+  const metrics = useMemo(() => [
+    "Pts Won", "Pts Max", "PTS", "TRB", "AST", "STL", "BLK", "TOV"
+  ], []);
+
+  // Compute global min/max values across the entire dataset. 
+  // (You may choose to only consider the filtered data for these scales.)
   const { globalMaxValues, globalMinValues } = useMemo(() => {
     const maxValues = {};
     const minValues = {};
@@ -96,116 +128,185 @@ function RadarDashboard() {
     return { globalMaxValues: maxValues, globalMinValues: minValues };
   }, [data, metrics]);
 
-  // Update selected player when currentIndex changes.
+  // Initialize selected player once the players list is known
   useEffect(() => {
     if (players.length === 0) return;
     setSelectedPlayer(players[currentIndex]);
   }, [players, currentIndex]);
 
-  // Combined interval: update progress every 50ms and advance player when progress reaches 1 (3000ms total).
+  // Initialize selected team
   useEffect(() => {
-    if (players.length === 0) return;
-    const tick = 50;
-    const totalDuration = 3000;
-    const interval = setInterval(() => {
-      if (!pausedRef.current) {
-        setProgress(prev => {
-          const newProgress = prev + tick / totalDuration;
-          if (newProgress >= 1) {
-            setCurrentIndex(prevIndex => {
-              const nextIndex = (prevIndex + 1) % players.length;
-              setSelectedPlayer(players[nextIndex]);
-              return nextIndex;
-            });
-            return 0;
-          }
-          return newProgress;
-        });
-      }
-    }, tick);
-    return () => clearInterval(interval);
-  }, [players]);
+    if (teams.length === 0) return;
+    setSelectedTeam(teams[0]);
+  }, [teams]);
 
-  // Reset progress when selectedPlayer changes.
-  useEffect(() => {
-    setProgress(0);
-  }, [selectedPlayer]);
-
-  // Stabilize event callbacks.
-  // const handlePolygonHover = useCallback(() => setPaused(true), []);
-  // const handlePolygonOut = useCallback(() => setPaused(false), []);
-
+  // Handlers
+  const handleTeamChange = (event) => {
+    setSelectedTeam(event.target.value);
+  };
+  const handlePlayerChange = (event) => {
+    setSelectedPlayer(event.target.value);
+  };
+  const handleSingleTeamChange = (event) => {
+    setOnlySingleTeam(event.target.checked);
+  };
   const handlePolygonHover = useCallback((year) => {
     setPaused(true);
     setHoveredYear(year);
   }, []);
-
   const handlePolygonOut = useCallback(() => {
     setPaused(false);
     setHoveredYear(null);
   }, []);
-
-  // Filter records for the selected player.
-  const playerRecords = useMemo(
-    () => data.filter(d => d.Player === selectedPlayer),
-    [data, selectedPlayer]
-  );
-
   const handleLineHover = useCallback((year) => {
     setHoveredYear(year);
     setPaused(year !== null);
   }, []);
 
-  // Compute the latest record for the selected player.
+  // Here is your final "filtered data" for the selected player
+  const playerRecords = useMemo(() => {
+    return yearFilteredData.filter(d => d.Player === selectedPlayer);
+  }, [yearFilteredData, selectedPlayer]);
+
   const latestRecord = useMemo(() => {
     if (playerRecords.length === 0) return null;
     return playerRecords.reduce((acc, d) => (d.Year > acc.Year ? d : acc), playerRecords[0]);
   }, [playerRecords]);
 
+  // Handlers for range slider
+  const handleMinYearChange = (event) => {
+    const newMin = Number(event.target.value);
+    if (newMin <= maxYear) {
+      setMinYear(newMin);
+    }
+  };
+  const handleMaxYearChange = (event) => {
+    const newMax = Number(event.target.value);
+    if (newMax >= minYear) {
+      setMaxYear(newMax);
+    }
+  };
+
+  // Decide on the global min and max year from your dataset
+  const overallMinYear = useMemo(() => d3.min(data, d => d.Year) || 1980, [data]);
+  const overallMaxYear = useMemo(() => d3.max(data, d => d.Year) || 2020, [data]);
+
   return (
-    <div className="dashboard-container">
-      <div className="chart-wrapper">
-        <PlayerInfo 
-          name={selectedPlayer} 
-          team={latestRecord ? latestRecord.Team : ""} 
-          rank={latestRecord ? latestRecord.Team_Rank : ""}
-        />
-        <div className="radar-chart-container">
-          <RadarChart 
-            playerData={playerRecords} 
-            metrics={metrics}
-            globalMaxValues={globalMaxValues} 
-            globalMinValues={globalMinValues} 
-            onPolygonHover={handlePolygonHover}
-            onPolygonOut={handlePolygonOut}
-            hoveredYear={hoveredYear}
-          />
+    <div className="outer-container">
+      <div className="dashboard-container">
+        <div className="top-row">
+          <div className="left-panel">
+            <div className="chart-wrapper">
+              <PlayerInfo 
+                name={selectedPlayer}
+                team={latestRecord ? latestRecord.Team : ""}
+                rank={latestRecord ? latestRecord.Team_Rank : ""}
+              />
+              <div className="radar-chart-container">
+                <RadarChart 
+                  playerData={playerRecords}
+                  metrics={metrics}
+                  globalMaxValues={globalMaxValues}
+                  globalMinValues={globalMinValues}
+                  onPolygonHover={handlePolygonHover}
+                  onPolygonOut={handlePolygonOut}
+                  hoveredYear={hoveredYear}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="right-panel">
+            <div className="bottom-charts">
+              <div className="line-chart-wrapper">
+                {playerRecords.length > 0 && (
+                  <LineChart
+                    playerData={playerRecords}
+                    metrics={metrics}
+                    globalMinValues={globalMinValues}
+                    globalMaxValues={globalMaxValues}
+                    hoveredYear={hoveredYear}
+                    onLineHover={handleLineHover}
+                  />
+                )}
+              </div>
+              <div className="pie-chart-wrapper">
+                {playerRecords.length > 0 && (
+                  <PieChart
+                    playerData={playerRecords}
+                    hoveredYear={hoveredYear}
+                    onPieHover={setPaused}
+                  />
+                )}
+              </div>
+            </div>
+            {/* Selection container for Team, Player, and Single-Team checkbox */}
+            <div className="selection-container">
+              <div className="team-selection">
+                <label htmlFor="teamSelect" className="team-select-label">
+                  Team:
+                </label>
+                <select id="teamSelect" value={selectedTeam} onChange={handleTeamChange}>
+                  {teams.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="player-selection">
+                <label htmlFor="playerSelect" className="player-select-label">
+                  Player's Name:
+                </label>
+                <select id="playerSelect" value={selectedPlayer} onChange={handlePlayerChange}>
+                  {players.map(player => (
+                    <option key={player} value={player}>{player}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="single-team-only">
+                <label className="single-team-label" htmlFor="singleTeamCheckbox">
+                  Single Team Only
+                </label>
+                <input
+                  id="singleTeamCheckbox"
+                  type="checkbox"
+                  checked={onlySingleTeam}
+                  onChange={handleSingleTeamChange}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progress * 100}%` }}></div>
-        </div>
-      </div>
-      <div className="bottom-charts">
-        <div className="line-chart-wrapper">
-          {playerRecords.length > 0 && (
-            <LineChart 
-              playerData={playerRecords} 
-              metrics={metrics}
-              globalMinValues={globalMinValues}
-              globalMaxValues={globalMaxValues}
-              hoveredYear={hoveredYear}
-              onLineHover={handleLineHover}
+        {/* YEAR RANGE SLIDERS */}
+        <div className="year-slider-container">
+          <div className="year-slider">
+            <label htmlFor="minYearSlider">Start Year: {minYear}</label>
+            <input
+              id="minYearSlider"
+              type="range"
+              min={overallMinYear}
+              max={overallMaxYear}
+              value={minYear}
+              onChange={handleMinYearChange}
             />
-          )}
-        </div>
-        <div className="pie-chart-wrapper">
-          {playerRecords.length > 0 && (
-            <PieChart 
-              playerData={playerRecords} 
-              hoveredYear={hoveredYear} 
-              onPieHover={setPaused} 
+          </div>
+          <div className="year-slider">
+            <label htmlFor="maxYearSlider">End Year: {maxYear}</label>
+            <input
+              id="maxYearSlider"
+              type="range"
+              min={overallMinYear}
+              max={overallMaxYear}
+              value={maxYear}
+              onChange={handleMaxYearChange}
             />
-          )}
+          </div>
+        </div>
+        <div className="additional-charts">
+          <div className="rank-bar-chart">
+            {playerRecords.length > 0 && <RankBarChart playerData={playerRecords} />}
+          </div>
+          <div className="rank-scatter-chart">
+            {playerRecords.length > 0 && <RankScatterChart playerData={playerRecords} />}
+          </div>
         </div>
       </div>
     </div>
@@ -734,5 +835,253 @@ function RadarChart({ playerData, metrics, globalMaxValues, globalMinValues, onP
   return <svg ref={ref}></svg>;
 }
 
+function RankBarChart({ playerData }) {
+  const ref = useRef();
+
+  // Memoize the rank metrics so the array reference doesn't change on every render.
+  const rankMetrics = useMemo(() => [
+    "PER_rank",
+    "Pt/g_rank",
+    "Assist/g_rank",
+    "Reb/g_rank",
+    "TS%_rank",
+    "WinShare_rank"
+  ], []);
+
+  // Get the latest record for the selected player.
+  const latestRecord = useMemo(() => {
+    if (!playerData || playerData.length === 0) return null;
+    return playerData.reduce((acc, d) => (d.Year > acc.Year ? d : acc), playerData[0]);
+  }, [playerData]);
+
+  useEffect(() => {
+    if (!latestRecord) return;
+
+    // Prepare data from the rank metrics.
+    const data = rankMetrics.map(metric => ({
+      metric,
+      value: +latestRecord[metric]
+    }));
+
+    const margin = { top: 20, right: 20, bottom: 40, left: 120 };
+    const width = 400 - margin.left - margin.right;
+    const height = 300 - margin.top - margin.bottom;
+
+    // Clear any previous SVG content.
+    const svg = d3.select(ref.current);
+    svg.selectAll("*").remove();
+
+    // Set SVG dimensions.
+    svg.attr("width", width + margin.left + margin.right)
+       .attr("height", height + margin.top + margin.bottom);
+
+    const g = svg.append("g")
+                 .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // X scale for the rank values.
+    const x = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.value)])
+                .range([0, width])
+                .nice();
+
+    // Y scale for the rank metrics.
+    const y = d3.scaleBand()
+                .domain(data.map(d => d.metric))
+                .range([0, height])
+                .padding(0.2);
+
+    // Add X axis.
+    g.append("g")
+     .attr("transform", `translate(0, ${height})`)
+     .call(d3.axisBottom(x));
+
+    // Add Y axis.
+    g.append("g")
+     .call(d3.axisLeft(y));
+
+    // Create a tooltip.
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "bar-tooltip")
+      .style("position", "absolute")
+      .style("text-align", "center")
+      .style("width", "auto")
+      .style("height", "auto")
+      .style("padding", "8px")
+      .style("font-size", "12px")
+      .style("background", "lightsteelblue")
+      .style("border", "0px")
+      .style("border-radius", "8px")
+      .style("pointer-events", "none")
+      .style("opacity", 0);
+
+    // Draw bars with initial zero width for animation.
+    g.selectAll(".bar")
+     .data(data)
+     .enter()
+     .append("rect")
+       .attr("class", "bar")
+       .attr("y", d => y(d.metric))
+       .attr("height", y.bandwidth())
+       .attr("x", 0)
+       .attr("width", 0)
+       .attr("fill", "#69b3a2")
+       .on("mouseover", function(event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("fill", "#ff7f0e");
+          tooltip.transition()
+                 .duration(200)
+                 .style("opacity", 0.9);
+          tooltip.html(`<strong>${d.metric}</strong>: ${d.value}`)
+                 .style("left", (event.pageX + 10) + "px")
+                 .style("top", (event.pageY - 28) + "px");
+       })
+       .on("mouseout", function(event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("fill", "#69b3a2");
+          tooltip.transition()
+                 .duration(500)
+                 .style("opacity", 0);
+       })
+       .transition()
+       .duration(800)
+       .attr("width", d => x(d.value));
+
+    // Clean up: Remove tooltip when component unmounts.
+    return () => {
+      tooltip.remove();
+    };
+
+  }, [latestRecord]); // Only re-run this effect when latestRecord changes.
+
+  return <svg ref={ref}></svg>;
+}
+
+function RankScatterChart({ playerData }) {
+  const ref = useRef();
+
+  useEffect(() => {
+    if (!playerData || playerData.length === 0) return;
+
+    // Define chart dimensions.
+    const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+    const width = 400 - margin.left - margin.right;
+    const height = 300 - margin.top - margin.bottom;
+
+    // Clear previous content.
+    const svg = d3.select(ref.current);
+    svg.selectAll("*").remove();
+    svg.attr("width", width + margin.left + margin.right)
+       .attr("height", height + margin.top + margin.bottom);
+
+    // Append a group for chart elements with applied margins.
+    const g = svg.append("g")
+                 .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Set x and y scales based on chosen metrics.
+    const x = d3.scaleLinear()
+                .domain(d3.extent(playerData, d => +d.PER_rank))
+                .nice()
+                .range([0, width]);
+
+    const y = d3.scaleLinear()
+                .domain(d3.extent(playerData, d => +d.MVP_rank))
+                .nice()
+                .range([height, 0]);
+
+    // Draw x-axis.
+    const xAxis = d3.axisBottom(x);
+    g.append("g")
+     .attr("transform", `translate(0, ${height})`)
+     .call(xAxis);
+
+    // Draw y-axis.
+    const yAxis = d3.axisLeft(y);
+    g.append("g")
+     .call(yAxis);
+
+    // Add x-axis label.
+    g.append("text")
+     .attr("x", width / 2)
+     .attr("y", height + margin.bottom - 10)
+     .attr("text-anchor", "middle")
+     .attr("font-size", "12px")
+     .attr("fill", "#000")
+     .text("PER_rank");
+
+    // Add y-axis label.
+    g.append("text")
+     .attr("transform", "rotate(-90)")
+     .attr("x", -height / 2)
+     .attr("y", -margin.left + 15)
+     .attr("text-anchor", "middle")
+     .attr("font-size", "12px")
+     .attr("fill", "#000")
+     .text("MVP_rank");
+
+    // Create tooltip for interactivity.
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "scatter-tooltip")
+      .style("position", "absolute")
+      .style("text-align", "center")
+      .style("padding", "8px")
+      .style("font-size", "12px")
+      .style("background", "lightsteelblue")
+      .style("border", "0px")
+      .style("border-radius", "8px")
+      .style("pointer-events", "none")
+      .style("opacity", 0);
+
+    // Plot circles for each data point.
+    const circles = g.selectAll("circle")
+      .data(playerData)
+      .enter()
+      .append("circle")
+      .attr("cx", d => x(+d.PER_rank))
+      .attr("cy", d => y(+d.MVP_rank))
+      .attr("r", 0) // Start with radius 0 for animation.
+      .attr("fill", "#2ca02c")
+      .attr("opacity", 0.7)
+      .on("mouseover", function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("r", 8);
+        tooltip.transition()
+               .duration(200)
+               .style("opacity", 0.9);
+        tooltip.html(`<strong>PER_rank:</strong> ${d.PER_rank}<br><strong>MVP_rank:</strong> ${d.MVP_rank}`)
+               .style("left", (event.pageX + 10) + "px")
+               .style("top", (event.pageY - 28) + "px");
+      })
+      .on("mouseout", function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("r", 5);
+        tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      });
+
+    // Animate circles from radius 0 to radius 5.
+    circles.transition()
+      .duration(800)
+      .attr("r", 5);
+
+    // Clean up tooltip on component unmount.
+    return () => {
+      tooltip.remove();
+    };
+
+  }, [playerData]);
+
+  return <svg ref={ref}></svg>;
+}
 
 ReactDOM.render(<RadarDashboard />, document.getElementById("chartContainer"));
